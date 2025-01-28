@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html ng-app="financeApp">
+<head>
+  <title>Personal Finance Tracker</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-top: 20px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    nav {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    nav a {
+      margin-right: 15px;
+      text-decoration: none;
+      color: #cce7ff;
+      padding: 8px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    nav a:hover {
+      background-color: #4169e1;
+      transform: scale(1.1);
+    }
+    nav a.active {
+      font-weight: bold;
+      background-color: #1e90ff;
+    }
+    section {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.8s;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      width: calc(100% - 20px);
+    }
+    button {
+      background-color: #1e90ff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #4169e1;
+      transform: scale(1.05);
+    }
+    .floating-icons {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .floating-icons img {
+      position: absolute;
+      width: 40px;
+      animation: float 6s infinite ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes float {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Personal Finance Tracker</h1>
+
+  <nav>
+    <a href="#/dashboard" ng-class="{active: currentRoute === '/dashboard'}">Dashboard</a>
+    <a href="#/expenses" ng-class="{active: currentRoute === '/expenses'}">Expenses</a>
+    <a href="#/income" ng-class="{active: currentRoute === '/income'}">Income</a>
+  </nav>
+
+  <div ng-view></div>
+
+  <div class="floating-icons">
+    <img src="money-icon.png" style="top: 10%; left: 20%;">
+    <img src="bank-icon.png" style="top: 50%; right: 20%;">
+    <img src="wallet-icon.png" style="top: 70%; left: 10%;">
+  </div>
+
+  <script>
+    const app = angular.module("financeApp", ["ngRoute"]);
+
+    app.config(function ($routeProvider) {
+      $routeProvider
+        .when("/dashboard", {
+          template: `
+            <section>
+              <h2>Dashboard</h2>
+              <form>
+                <input type="number" ng-model="customIncome" placeholder="Enter custom income" />
+                <input type="number" ng-model="customExpense" placeholder="Enter custom expense" />
+              </form>
+              <p>Total Income: {{summary.totalIncome | currency}}</p>
+              <p>Total Expenses: {{summary.totalExpenses | currency}}</p>
+              <p>Net Balance: {{summary.netBalance | currency}}</p>
+            </section>
+          `,
+          controller: "DashboardController",
+        })
+        .when("/expenses", {
+          template: `
+            <section>
+              <h2>Expenses</h2>
+              <form ng-submit="addExpense()">
+                <input type="number" ng-model="expense.amount" placeholder="Amount" required />
+                <input type="text" ng-model="expense.description" placeholder="Description" required />
+                <button type="submit">Add Expense</button>
+              </form>
+              <ul>
+                <li ng-repeat="exp in expenses">
+                  {{exp.amount | currency}} - {{exp.description}}
+                  <button ng-click="deleteExpense($index)">Delete</button>
+                </li>
+              </ul>
+            </section>
+          `,
+          controller: "ExpensesController",
+        })
+        .when("/income", {
+          template: `
+            <section>
+              <h2>Income</h2>
+              <form ng-submit="addIncome()">
+                <input type="number" ng-model="income.amount" placeholder="Amount" required />
+                <input type="text" ng-model="income.source" placeholder="Source" required />
+                <button type="submit">Add Income</button>
+              </form>
+              <ul>
+                <li ng-repeat="inc in incomes">
+                  {{inc.amount | currency}} - {{inc.source}}
+                  <button ng-click="deleteIncome($index)">Delete</button>
+                </li>
+              </ul>
+            </section>
+          `,
+          controller: "IncomeController",
+        })
+        .otherwise({
+          redirectTo: "/dashboard",
+        });
+    });
+
+    app.run(function ($rootScope, $location) {
+      $rootScope.incomes = [];
+      $rootScope.expenses = [];
+      $rootScope.$on("$routeChangeSuccess", function () {
+        $rootScope.currentRoute = $location.path();
+      });
+    });
+
+    app.controller("DashboardController", function ($scope, $rootScope) {
+      function calculateSummary() {
+        const totalIncome = $rootScope.incomes.reduce((sum, income) => sum + parseFloat(income.amount), 0);
+        const totalExpenses = $rootScope.expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+        return {
+          totalIncome: totalIncome + parseFloat($scope.customIncome || 0),
+          totalExpenses: totalExpenses + parseFloat($scope.customExpense || 0),
+          netBalance: totalIncome - totalExpenses + parseFloat($scope.customIncome || 0) - parseFloat($scope.customExpense || 0),
+        };
+      }
+
+      $scope.summary = calculateSummary();
+
+      $scope.$watchGroup(["incomes", "expenses", "customIncome", "customExpense"], function () {
+        $scope.summary = calculateSummary();
+      });
+    });
+
+    app.controller("ExpensesController", function ($scope, $rootScope) {
+      $scope.expenses = $rootScope.expenses;
+
+      $scope.addExpense = function () {
+        if ($scope.expense) {
+          $scope.expenses.push({
+            amount: parseFloat($scope.expense.amount),
+            description: $scope.expense.description,
+          });
+          $scope.expense = {};
+        }
+      };
+
+      $scope.deleteExpense = function (index) {
+        $scope.expenses.splice(index, 1);
+      };
+    });
+
+    app.controller("IncomeController", function ($scope, $rootScope) {
+      $scope.incomes = $rootScope.incomes;
+
+      $scope.addIncome = function () {
+        if ($scope.income) {
+          $scope.incomes.push({
+            amount: parseFloat($scope.income.amount),
+            source: $scope.income.source,
+          });
+          $scope.income = {};
+        }
+      };
+
+      $scope.deleteIncome = function (index) {
+        $scope.incomes.splice(index, 1);
+      };
+    });
+  </script>
+</body>
+</html>
